@@ -50,37 +50,32 @@ def insert_scores():
 # Process all votes and calculate Trueskill parameters + score
 def process_past_votes():
   print 'Processing past votes'
-  Database.db.scores.ensure_index([('image_id', pymongo.ASCENDING)]) # is this necessary?
 
   # votes = Database.db.votes.find({'ip': {'$exists': True}})
   votes = Database.db.votes.find()
   print votes.count(), 'un-calculated votes found in the DB'
   total_vote_count = 0
-  used_vote_count = 0
   start_time = time()
+
+  gifs_dict = dict([(gif['file_id'], str(gif['_id'])) for gif in Database.db.gifs.find()])
+
   for vote in votes:
     total_vote_count += 1
     if total_vote_count % 1000 == 0:
       print "Processed %s votes in %s" % (total_vote_count, time() - start_time)
-      print "Used %s votes" % used_vote_count
       start_time = time()
-
     try:
-      metric = str(vote['metric'])
-      question_id = str(Database.db.questions.find_one({'metric': metric})['_id'])
+      metric = vote['metric']
       country = vote.get('country', None)
-      used_vote_count += 1
   
       if vote['choice'] in ['left', 'equal']:
         winner_file_id = vote['left']
         loser_file_id = vote['right']
-        winner_image_id = str(Database.db.gifs.find_one({'file_id': winner_file_id})['_id'])
-        loser_image_id = str(Database.db.gifs.find_one({'file_id': loser_file_id})['_id'])
       else:
         winner_file_id = vote['right']
         loser_file_id = vote['left']
-        winner_image_id = str(Database.db.gifs.find_one({'file_id': winner_file_id})['_id'])
-        loser_image_id = str(Database.db.gifs.find_one({'file_id': loser_file_id})['_id'])
+      winner_image_id = gifs_dict[winner_file_id]
+      loser_image_id = gifs_dict[loser_file_id]
       isDraw = vote['choice'] == 'both' or vote['choice'] == 'neither'
   
       update_scores_start = time()
@@ -93,5 +88,5 @@ def process_past_votes():
 
   print 'Done processing votes!'
 
-insert_scores()
+# insert_scores()
 process_past_votes()

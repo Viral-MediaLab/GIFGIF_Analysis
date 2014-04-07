@@ -106,7 +106,6 @@ class database(object):
         winner_score_doc = self.get_score(winner_image_id)
         loser_score_doc = self.get_score(loser_image_id)
 
-
         if winner_score_doc is None:
             print "Couldn't find a score document with image_id:", winner_image_id
             return
