@@ -121,27 +121,22 @@ class database(object):
 
         # update scores using the trueskill update equations
         (mu_winner, std_winner), (mu_loser, std_loser) = trueskill.update_rating((old_mu_winner, old_std_winner), (old_mu_loser, old_std_loser), isDraw)
-
-        # 2. Push scores and Trueskill parameters of the images to the db
         self._push_score(metric, winner_score_doc, mu_winner, std_winner, old_mu_winner, old_std_winner, isDraw)
+        self._push_score(metric, loser_score_doc, mu_loser, std_loser, old_mu_loser, old_std_loser, isDraw)
 
         if country:
-            winner_country_score_doc = self.get_country_score(winner_image_id)
-            loser_country_score_doc = self.get_country_score(loser_image_id)
+            winner_score_doc_c = self.get_country_score(winner_image_id)
+            loser_score_doc_c = self.get_country_score(loser_image_id)
 
             # get the last mu and standard deviation
-            old_mu_winner_c = winner_country_score_doc['parameters'][country][metric]['mu']
-            old_std_winner_c = winner_country_score_doc['parameters'][country][metric]['std']
-            old_mu_loser_c = loser_country_score_doc['parameters'][country][metric]['mu']
-            old_std_loser_c = loser_country_score_doc['parameters'][country][metric]['std']
+            old_mu_winner_c = winner_score_doc_c['parameters'][country][metric]['mu']
+            old_std_winner_c = winner_score_doc_c['parameters'][country][metric]['std']
+            old_mu_loser_c = loser_score_doc_c['parameters'][country][metric]['mu']
+            old_std_loser_c = loser_score_doc_c['parameters'][country][metric]['std']
 
             (mu_winner_c, std_winner_c), (mu_loser_c, std_loser_c) = trueskill.update_rating((old_mu_winner_c, old_std_winner_c), (old_mu_loser_c, old_std_loser_c), isDraw)
-
-            self._push_country_score(metric, loser_country_score_doc, mu_loser_c, std_loser_c, old_mu_loser_c, old_std_loser_c, isDraw, country)
-
-        # 3. Increment vote count for the question
-        question_id = str(Database.db.questions.find_one({'metric': metric})['_id'])
-        self.db.questions.update({'_id': ObjectId(question_id)}, { '$inc' : { 'num_votes': 1 }})
+            self._push_country_score(metric, winner_score_doc_c, mu_winner_c, std_winner_c, old_mu_winner_c, old_std_winner_c, isDraw, country)
+            self._push_country_score(metric, loser_score_doc_c, mu_loser_c, std_loser_c, old_mu_loser_c, old_std_loser_c, isDraw, country)
 
     @property
     def db(self):

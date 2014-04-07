@@ -32,6 +32,7 @@ def insert_scores():
   # drop index for fast insertion
   Database.db.scores.drop_indexes()
   Database.db.scores.ensure_index("_id")
+
   Database.db.country_scores.drop_indexes()
   Database.db.country_scores.ensure_index("_id")
 
@@ -50,6 +51,8 @@ def insert_scores():
 # Process all votes and calculate Trueskill parameters + score
 def process_past_votes():
   print 'Processing past votes'
+  Database.db.scores.ensure_index([('image_id', pymongo.ASCENDING)]) 
+  Database.db.country_scores.ensure_index([('image_id', pymongo.ASCENDING)]) 
 
   # votes = Database.db.votes.find({'ip': {'$exists': True}})
   votes = Database.db.votes.find()
@@ -64,6 +67,9 @@ def process_past_votes():
     if total_vote_count % 1000 == 0:
       print "Processed %s votes in %s" % (total_vote_count, time() - start_time)
       start_time = time()
+
+    if total_vote_count == 1000:
+      break
     try:
       metric = vote['metric']
       country = vote.get('country', None)
