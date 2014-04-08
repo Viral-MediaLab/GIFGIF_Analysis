@@ -8,7 +8,7 @@
 *.so
 *.py~
 *.pyc
-*.dat
+
 
 # Packages #
 ############
