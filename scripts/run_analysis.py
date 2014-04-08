@@ -68,8 +68,6 @@ def process_past_votes():
       print "Processed %s votes in %s" % (total_vote_count, time() - start_time)
       start_time = time()
 
-    if total_vote_count == 1000:
-      break
     try:
       metric = vote['metric']
       country = vote.get('country', None)
@@ -94,5 +92,5 @@ def process_past_votes():
 
   print 'Done processing votes!'
 
-# insert_scores()
+insert_scores()
 process_past_votes()
