@@ -156,7 +156,7 @@ for emotion in metrics:
 	countrySimilarityOut[emotion] = results
 
 with open('countrySimilarity.json', 'w') as outfile:
-	json.dump(globalSimilarityOut, outfile, indent=3)
+	json.dump(countrySimilarityOut, outfile, indent=3)
 
 
 # Format for outputting to a JSON
