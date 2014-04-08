@@ -71,24 +71,24 @@ for score in country_scores:
 				sufficentVotesCountries.append(country)
 		# For each country in that list, get the scores, and compare their difference.
 		if len(sufficentVotesCountries) > 1:
+			# Calculate difference between countries
 			for country1 in sufficentVotesCountries:
 				for country2 in sufficentVotesCountries:
 					if country1 != country2:
 						difference = math.fabs(scores[country1][emotion] - scores[country2][emotion])
+						# Append the difference to an array of difference values for that given emotion and country-pair. These will later be averaged.
 						similarity[metricIndexes[emotion]][countryIndexes[country1]][countryIndexes[country2]].append(difference)
 						# print emotion + " " + str(difference) + " " + country1 + " " + country2
 				# print " ----- " 
+
 			#Calculate deviation from global scores
 			for country in sufficentVotesCountries:
 				thisScore = scores[country][emotion]
 				globalScore = globalScoreEntry['scores'][emotion]
-				# print vote_counts[country][emotion]
 				globalSimilarity[metricIndexes[emotion]][countryIndexes[country]].append(math.fabs(thisScore-globalScore))
-	# print similarity
+
 	count += 1
 	if count % 100 == 0:
-		# print similarity
-		# break
 		lapTime = time.time()
 		print "Finished " + str(count)
 		print "Remaining Time: " + str((lapTime-startTime)/count*(totalGifs-count)/60) + " minutes"
@@ -116,11 +116,14 @@ for x in range(0,17):
 # Normalize Per emotion
 for x in range(0,17):
 	maxVal = 0 
+
+	#Find the max value:
 	for y in range(0,252):
 		for z in range(0,252):
 			if similarity[x][y][z] > maxVal:
 				maxVal = similarity[x][y][z]
-	print maxVal
+
+	#Normalize by max value:
 	for y in range(0,252):
 		for z in range(0,252):
 			if similarity[x][y][z] != -1:
@@ -129,32 +132,34 @@ for x in range(0,17):
 # Normalize Global Per emotion
 for x in range(0,17):
 	maxVal = 0 
+
+	# Find max value:
 	for y in range(0,252):
 			if globalSimilarity[x][y] > maxVal:
 				maxVal = globalSimilarity[x][y]
-	print maxVal
+
+	#Normalize by max value:
 	for y in range(0,252):
 		if globalSimilarity[x][y] != -1:
 			globalSimilarity[x][y] = globalSimilarity[x][y]/maxVal
 
 
+# Format for outputting to a JSON
 countrySimilarityOut = {}
 for emotion in metrics:
 	results = {}
 	for country1 in countryIndexes:
-		# print country1
 		results[country1] = {}
 		for country2 in countryIndexes:
-			# result = {country2:
-			# print result
 			if similarity[metricIndexes[emotion]][countryIndexes[country1]][countryIndexes[country2]] != -1:
 				results[country1][country2] = similarity[metricIndexes[emotion]][countryIndexes[country1]][countryIndexes[country2]]
 	countrySimilarityOut[emotion] = results
 
 with open('countrySimilarity.json', 'w') as outfile:
-	json.dump(countrySimilarityOut, outfile)
+	json.dump(globalSimilarityOut, outfile, indent=3)
 
 
+# Format for outputting to a JSON
 globalSimilarityOut = {}
 for emotion in metrics:
 	results = {}
@@ -164,17 +169,10 @@ for emotion in metrics:
 	globalSimilarityOut[emotion] = results
 
 with open('globalSimilarity.json', 'w') as outfile:
-	json.dump(globalSimilarityOut, outfile)
+	json.dump(globalSimilarityOut, outfile, indent=3)
 
 
 
-
-
-
-
-
-# with open('globalSimilarity.json', 'w') as outfile:
-#   json.dump(data, outfile)
 
 
 
