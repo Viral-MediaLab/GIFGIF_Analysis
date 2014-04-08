@@ -1,6 +1,7 @@
 '''
 Given the scores of each gif, segmented by country, build a similarity matrix that shows the similarity 
-between country A and country B (perhaps, on a normalized scale of 0.0 - 1.0).
+between country A and country B (perhaps, on a normalized scale of 0.0 - 1.0). 
+In the code below, 0.0 means identically similar, 1.0 means most different. 
 The matrix will be of size N by N, where N is the number of countries we have available. The matrix can be 
 reduced to be upper triangular.
 
@@ -15,6 +16,9 @@ Similarity is calculated by:
 
 - Should we also be calculating the deviation from the global result? 
 - If so, it would require us to query the mongodb each time. Unless we first make a dict
+
+- How do we defend the choice of vote threshold? Surely the results change if we pick a threshold of 3 vs 8.
+- Perhaps we can try a variety of thresholds and see if results converge at some point.
 '''
 
 
@@ -30,6 +34,7 @@ countryIndexes = {'AP':0,'EU':1,'AD':2,'AE':3,'AF':4,'AG':5,'AI':6,'AL':7,'AM':8
 minVotes = 5 #Number of votes that must have been cast for a specific gif for a specific emotion in order to consider it's data
 # How do we defend the choice of X votes as min?
 similarity = [[[[] for x in xrange(252)] for x in xrange(252)] for x in range(17)] # Create 17 55x55 2D-matricies. Each initialized with an empty array.
+globalSimilarity = [[[] for x in xrange(252)] for x in range(17)] # Create 17 55x55 2D-matricies. Each initialized with an empty array.
 
 
 # Get all Scores
@@ -39,6 +44,7 @@ try:
 except:
 	print "Can't seem to find the meteor database"
 c_country_scores = db.country_scores
+c_scores = db.scores
 country_scores = c_country_scores.find()
 
 
@@ -56,6 +62,7 @@ for score in country_scores:
 	neither_count = score['neither_count'] # Object list with countries as keys and neither count as value
 	neither_counts = score['neither_counts'] # Object list with countries as keys list of emotions with neither count for that country and emotion as value
 	country_vote_count = score['country_vote_count'] # Object list with countries as keys and vote count as value
+	globalScoreEntry = c_scores.find_one({'image_id':image_id})
 	for emotion in metrics:
 		# Find countries that have enough votes, add them to a list
 		sufficentVotesCountries = []
@@ -71,6 +78,12 @@ for score in country_scores:
 						similarity[metricIndexes[emotion]][countryIndexes[country1]][countryIndexes[country2]].append(difference)
 						# print emotion + " " + str(difference) + " " + country1 + " " + country2
 				# print " ----- " 
+			#Calculate deviation from global scores
+			for country in sufficentVotesCountries:
+				thisScore = scores[country][emotion]
+				globalScore = globalScoreEntry['scores'][emotion]
+				# print vote_counts[country][emotion]
+				globalSimilarity[metricIndexes[emotion]][countryIndexes[country]].append(math.fabs(thisScore-globalScore))
 	# print similarity
 	count += 1
 	if count % 100 == 0:
@@ -92,9 +105,13 @@ for x in range(0,17):
 			else:
 				similarity[x][y][z] = -1
 
-# print similarity
-
-
+# For each resulting array in globalSimilarity, compress it to a single number.
+for x in range(0,17):
+	for y in range(0,252):
+			if len(globalSimilarity[x][y]) >0:
+				globalSimilarity[x][y] = sum(globalSimilarity[x][y])/len(globalSimilarity[x][y])
+			else:
+				globalSimilarity[x][y] = -1
 
 # Normalize Per emotion
 for x in range(0,17):
@@ -109,8 +126,56 @@ for x in range(0,17):
 			if similarity[x][y][z] != -1:
 				similarity[x][y][z] = similarity[x][y][z]/maxVal
 
+# Normalize Global Per emotion
+for x in range(0,17):
+	maxVal = 0 
+	for y in range(0,252):
+			if globalSimilarity[x][y] > maxVal:
+				maxVal = globalSimilarity[x][y]
+	print maxVal
+	for y in range(0,252):
+		if globalSimilarity[x][y] != -1:
+			globalSimilarity[x][y] = globalSimilarity[x][y]/maxVal
 
-print similarity
+
+countrySimilarityOut = {}
+for emotion in metrics:
+	results = {}
+	for country1 in countryIndexes:
+		# print country1
+		results[country1] = {}
+		for country2 in countryIndexes:
+			# result = {country2:
+			# print result
+			if similarity[metricIndexes[emotion]][countryIndexes[country1]][countryIndexes[country2]] != -1:
+				results[country1][country2] = similarity[metricIndexes[emotion]][countryIndexes[country1]][countryIndexes[country2]]
+	countrySimilarityOut[emotion] = results
+
+with open('countrySimilarity.json', 'w') as outfile:
+	json.dump(countrySimilarityOut, outfile)
+
+
+globalSimilarityOut = {}
+for emotion in metrics:
+	results = {}
+	for country1 in countryIndexes:
+		if globalSimilarity[metricIndexes[emotion]][countryIndexes[country1]] != -1:
+			results[country1] = globalSimilarity[metricIndexes[emotion]][countryIndexes[country1]]
+	globalSimilarityOut[emotion] = results
+
+with open('globalSimilarity.json', 'w') as outfile:
+	json.dump(globalSimilarityOut, outfile)
+
+
+
+
+
+
+
+
+# with open('globalSimilarity.json', 'w') as outfile:
+#   json.dump(data, outfile)
+
 
 
 # ------------------------------------------------------------------------------------
