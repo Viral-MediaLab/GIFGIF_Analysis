@@ -27,6 +27,8 @@ import json
 import pymongo
 import math
 import time
+import pickle
+
 
 metrics = ['amusement','anger','contempt','contentment','disgust','embarrassment','excitement','fear','guilt','happiness','pleasure','pride','relief','sadness','satisfaction','shame','surprise']
 metricIndexes = {'amusement': 0,'anger': 1,'contempt': 2,'contentment': 3,'disgust': 4,'embarrassment': 5,'excitement': 6,'fear': 7,'guilt': 8,'happiness': 9,'pleasure': 10,'pride': 11,'relief': 12,'sadness': 13,'satisfaction': 14,'shame': 15,'surprise': 16}
@@ -143,6 +145,9 @@ for x in range(0,17):
 		if globalSimilarity[x][y] != -1:
 			globalSimilarity[x][y] = globalSimilarity[x][y]/maxVal
 
+
+pickle.dump(similarity, open( "similarity.p", "wb" ) )
+pickle.dump(globalSimilarity, open( "globalSimilarity.p", "wb" ) )
 
 # Format for outputting to a JSON
 countrySimilarityOut = {}

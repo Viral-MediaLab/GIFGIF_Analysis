@@ -36,7 +36,7 @@ def rgb2lab ( inputColor ) :
    XYZ[ 0 ] = round( X, 4 )
    XYZ[ 1 ] = round( Y, 4 )
    XYZ[ 2 ] = round( Z, 4 )
-   XYZ[ 0 ] = float( XYZ[ 0 ] ) / 95.047         # ref_X =  95.047   Observer= 2°, Illuminant= D65
+   XYZ[ 0 ] = float( XYZ[ 0 ] ) / 95.047         # ref_X =  95.047   
    XYZ[ 1 ] = float( XYZ[ 1 ] ) / 100.0          # ref_Y = 100.000
    XYZ[ 2 ] = float( XYZ[ 2 ] ) / 108.883        # ref_Z = 108.883
    num = 0
@@ -112,8 +112,8 @@ c_gifs = db.gifs
 #
 
 #Calculate metric average colors
-numColorsPerImage = 1
-numTopImages = 50
+numColorsPerImage = 5
+numTopImages = 15
 gifPath = '../../gifs/'
 
 averageColors = {}

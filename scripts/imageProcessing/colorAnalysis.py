@@ -3,30 +3,25 @@ import Image, ImageDraw
 def get_colors(infile, outfile, numcolors=1, swatchsize=20, resize=150):
     # Gist from Stefan Zollinger on Github: 
     # https://gist.github.com/zollinger/1722663
-
     image = Image.open(infile)
     image = image.resize((resize, resize))
     result = image.convert('P', palette=Image.ADAPTIVE, colors=numcolors)
     result.putalpha(0)
     colors = result.getcolors(resize*resize)
     print colors
-
     # Save colors to file
-
     pal = Image.new('RGB', (swatchsize*numcolors, swatchsize))
     draw = ImageDraw.Draw(pal)
-
     posx = 0
     for count, col in colors:
         draw.rectangle([posx, 0, posx+swatchsize, swatchsize], fill=col)
         posx = posx + swatchsize
-
     del draw
     pal.save(outfile, "PNG")
 
 
 # infile = '../../../giffig_misc/what/gifs/2CsCSsHqPVcNa_still.gif'
-# get_colors(infile, 'outfile.png')
+get_colors(infile, 'outfile.png')
 
 
 def returnDominant(infile, numcolors=1):
